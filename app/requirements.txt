@@ -1,0 +1,4 @@
+flask
+redis
+python-json-logger
+prometheus_client

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+data:
+  alerts.yml: |
+    groups:
+      - name: mood-alerts
+        rules:
+          - alert: AppDown
+            expr: up{job="app"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "App target down"
+
+          - alert: HighAppLatencyP95
+            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "p95 latency high (>0.8s)"
+              description: "Requires app histogram metric http_request_duration_seconds_bucket"
+
+          - alert: RedisExporterDown
+            expr: up{job="redis-exporter"} == 0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Redis exporter down"
