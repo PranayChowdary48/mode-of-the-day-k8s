@@ -1,1 +1,1 @@
-echo "k8s/minikube-darwin-arm64" >> .gitignore
+.DS_Store
