@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mood
+
+resources:
+  - namespace.yaml
+  - app/deployment.yaml
+  - app/service.yaml
+  - app/hpa.yaml
+  - redis/service.yaml
+  - redis/pvc.yaml
+  - redis/statefulset.yaml
+  - exporters/nginx-exporter.yaml
+  - exporters/redis-exporter.yaml
+  - monitoring/prometheus/configmap.yaml
+  - monitoring/prometheus/rules-configmap.yaml
+  - monitoring/prometheus/deployment.yaml
+  - monitoring/prometheus/service.yaml
+  - monitoring/grafana/secret.yaml
+  - monitoring/grafana/datasources-configmap.yaml
+  - monitoring/grafana/deployment.yaml
+  - monitoring/grafana/service.yaml
+  - ingress/ingress.yaml
