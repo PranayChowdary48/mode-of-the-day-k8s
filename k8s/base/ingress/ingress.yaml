@@ -7,13 +7,10 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-name: "mood-route"
     nginx.ingress.kubernetes.io/session-cookie-expires: "3600"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "3600"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
 spec:
   ingressClassName: nginx
   rules:
-    - host: mood.local
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -21,4 +18,4 @@ spec:
               service:
                 name: app
                 port:
-                  name: http
+                  number: 80
