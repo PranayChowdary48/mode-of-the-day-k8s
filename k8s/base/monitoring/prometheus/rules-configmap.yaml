@@ -8,7 +8,7 @@ data:
       - name: mood-alerts
         rules:
           - alert: AppDown
-            expr: up{job="app"} == 0
+            expr: up{job="app-pods"} == 0
             for: 1m
             labels:
               severity: critical
@@ -16,7 +16,7 @@ data:
               summary: "App target down"
 
           - alert: HighAppLatencyP95
-            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.8
+            expr: histogram_quantile(0.95, sum(rate(http_request_latency_seconds_bucket[5m])) by (le)) > 0.8
             for: 5m
             labels:
               severity: warning
