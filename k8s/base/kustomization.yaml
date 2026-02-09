@@ -11,14 +11,16 @@ resources:
   - redis/service.yaml
   - redis/pvc.yaml
   - redis/statefulset.yaml
-  - exporters/nginx-exporter.yaml
   - exporters/redis-exporter.yaml
   - monitoring/prometheus/configmap.yaml
   - monitoring/prometheus/rules-configmap.yaml
   - monitoring/prometheus/deployment.yaml
   - monitoring/prometheus/service.yaml
+  - monitoring/prometheus/rbac.yaml
   - monitoring/grafana/secret.yaml
   - monitoring/grafana/datasources-configmap.yaml
+  - monitoring/grafana/dashboard-provisioning-configmap.yaml
+  - monitoring/grafana/dashboards-configmap.yaml
   - monitoring/grafana/deployment.yaml
   - monitoring/grafana/service.yaml
   - ingress/ingress.yaml
