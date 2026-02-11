@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-adapter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-adapter
+  template:
+    metadata:
+      labels:
+        app: prometheus-adapter
+    spec:
+      serviceAccountName: prometheus-adapter
+      containers:
+        - name: prometheus-adapter
+          image: registry.k8s.io/prometheus-adapter/prometheus-adapter:v0.12.0
+          args:
+            - --cert-dir=/tmp/cert
+            - --secure-port=6443
+            - --prometheus-url=http://prometheus.mood.svc.cluster.local:9090
+            - --metrics-relist-interval=1m
+            - --config=/etc/adapter/config.yaml
+          ports:
+            - containerPort: 6443
+              name: https
+          volumeMounts:
+            - name: config
+              mountPath: /etc/adapter
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-adapter-config

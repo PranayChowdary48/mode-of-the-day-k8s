@@ -1,0 +1,133 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: NetworkPolicy
+      name: default-deny-ingress
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: default-deny-ingress
+      $patch: delete
+
+  - target:
+      kind: NetworkPolicy
+      name: allow-ingress-to-app
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-ingress-to-app
+      $patch: delete
+
+  - target:
+      kind: NetworkPolicy
+      name: allow-ingress-to-redis
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-ingress-to-redis
+      $patch: delete
+
+  - target:
+      kind: NetworkPolicy
+      name: allow-ingress-to-prometheus
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-ingress-to-prometheus
+      $patch: delete
+
+  - target:
+      kind: Rollout
+      name: app
+    patch: |-
+      apiVersion: argoproj.io/v1alpha1
+      kind: Rollout
+      metadata:
+        name: app
+      $patch: delete
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: app-hpa
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: app-hpa
+      $patch: delete
+
+  - target:
+      kind: Deployment
+      name: prometheus-adapter
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: prometheus-adapter
+      $patch: delete
+
+  - target:
+      kind: Service
+      name: prometheus-adapter
+    patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: prometheus-adapter
+      $patch: delete
+
+  - target:
+      kind: ConfigMap
+      name: prometheus-adapter-config
+    patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: prometheus-adapter-config
+      $patch: delete
+
+  - target:
+      kind: APIService
+      name: v1beta1.custom.metrics.k8s.io
+    patch: |-
+      apiVersion: apiregistration.k8s.io/v1
+      kind: APIService
+      metadata:
+        name: v1beta1.custom.metrics.k8s.io
+      $patch: delete
+
+  - target:
+      kind: ClusterRole
+      name: prometheus-adapter
+    patch: |-
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: prometheus-adapter
+      $patch: delete
+
+  - target:
+      kind: ClusterRoleBinding
+      name: prometheus-adapter
+    patch: |-
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: prometheus-adapter
+      $patch: delete
+
+  - target:
+      kind: ServiceAccount
+      name: prometheus-adapter
+    patch: |-
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: prometheus-adapter
+      $patch: delete

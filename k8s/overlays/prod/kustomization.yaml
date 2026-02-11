@@ -5,7 +5,7 @@ resources:
   - ../../base
 
 components:
-  - ../lightweight
+  - ../rollout-only
 
 patches:
   - target:
@@ -14,10 +14,9 @@ patches:
     path: patches/ingress-host.yaml
 
   - target:
-      kind: Deployment
+      kind: Rollout
       name: app
     path: patches/app-replicas.yaml
-
   - target:
       kind: Deployment
       name: prometheus
@@ -27,8 +26,9 @@ patches:
       kind: Deployment
       name: grafana
     path: patches/grafana-replicas.yaml
-
   - target:
-      kind: Deployment
+      group: argoproj.io
+      version: v1alpha1
+      kind: Rollout
       name: app
-    path: patches/resources.yaml
+    path: patches/rollout-resources.json

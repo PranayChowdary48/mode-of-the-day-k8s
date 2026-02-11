@@ -3,8 +3,15 @@ set -euo pipefail
 
 INGRESS_NS=${INGRESS_NS:-ingress-nginx}
 INGRESS_SVC=${INGRESS_SVC:-ingress-nginx-controller}
-INGRESS_HOST=${INGRESS_HOST:-mood.local}
+INGRESS_HOST=${INGRESS_HOST:-}
 APP_NS=${APP_NS:-mood}
+
+if [[ -z "${INGRESS_HOST}" ]]; then
+  INGRESS_HOST=$(kubectl -n "$APP_NS" get ingress mood-ingress -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || true)
+fi
+if [[ -z "${INGRESS_HOST}" ]]; then
+  INGRESS_HOST="mood.local"
+fi
 
 kubectl -n "$INGRESS_NS" port-forward "svc/$INGRESS_SVC" 8080:80 >/tmp/ingress_pf_8080.log 2>&1 &
 pf=$!

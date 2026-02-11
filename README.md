@@ -1,4 +1,17 @@
-kubectl apply -k k8s/overlays/dev
+make deploy-dev
+make deploy-prod
+
+Rollouts (prod):
+make rollout-set-image
+make rollout-status
+make rollout-describe
+
+Dev overlay removes: NetworkPolicies, Prometheus Adapter (custom metrics), Argo Rollouts.
+Prod overlay uses Rollouts + NetworkPolicies + custom-metrics HPA.
+
+platform components:
+make deploy-platform-dev
+make deploy-platform-prod
 
 kubectl -n mood port-forward svc/app 8080:80
 kubectl -n mood port-forward svc/prometheus 9090:9090
@@ -27,6 +40,13 @@ kubectl -n ingress-nginx get endpoints ingress-nginx-controller -o wide
 kubectl -n mood logs deploy/prometheus --tail=80
 kubectl -n mood exec -it deploy/prometheus -- sh -c 'sed -n "1,140p" /etc/prometheus/prometheus.yml'
 
-kubectl -n mood rollout restart deployment/app
+kubectl argo rollouts restart app -n mood
 kubectl -n mood rollout restart deployment/prometheus
 kubectl -n mood rollout status deployment/prometheus
+
+Argo Rollouts:
+kubectl -n mood get rollouts
+kubectl argo rollouts get rollout app -n mood
+
+Custom metrics (HPA):
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | head

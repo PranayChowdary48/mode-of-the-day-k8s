@@ -6,17 +6,28 @@ namespace: mood
 resources:
   - namespace.yaml
   - app/deployment.yaml
+  - app/rollout.yaml
   - app/service.yaml
   - app/hpa.yaml
+  - app/pdb.yaml
   - redis/service.yaml
   - redis/pvc.yaml
   - redis/statefulset.yaml
   - exporters/redis-exporter.yaml
+  - network/default-deny-ingress.yaml
+  - network/allow-ingress-to-app.yaml
+  - network/allow-ingress-to-redis.yaml
+  - network/allow-ingress-to-prometheus.yaml
   - monitoring/prometheus/configmap.yaml
   - monitoring/prometheus/rules-configmap.yaml
   - monitoring/prometheus/deployment.yaml
   - monitoring/prometheus/service.yaml
   - monitoring/prometheus/rbac.yaml
+  - monitoring/prometheus-adapter/configmap.yaml
+  - monitoring/prometheus-adapter/rbac.yaml
+  - monitoring/prometheus-adapter/deployment.yaml
+  - monitoring/prometheus-adapter/service.yaml
+  - monitoring/prometheus-adapter/apiservice.yaml
   - monitoring/grafana/secret.yaml
   - monitoring/grafana/datasources-configmap.yaml
   - monitoring/grafana/dashboard-provisioning-configmap.yaml
