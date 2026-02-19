@@ -8,6 +8,11 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-name: "mood-route"
     nginx.ingress.kubernetes.io/session-cookie-expires: "10"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "10"
+    nginx.ingress.kubernetes.io/limit-rps: "5"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+    nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502 http_503 http_504 http_429"
+    nginx.ingress.kubernetes.io/proxy-next-upstream-tries: "3"
+    nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "5"
 spec:
   ingressClassName: nginx
   rules:

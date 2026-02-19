@@ -35,4 +35,18 @@ spec:
           name: http_requests_per_second
         target:
           type: AverageValue
+          averageValue: "0.5"
+    - type: Pods
+      pods:
+        metric:
+          name: http_request_latency_p95_seconds
+        target:
+          type: AverageValue
+          averageValue: "0.5"
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_in_flight
+        target:
+          type: AverageValue
           averageValue: "2"

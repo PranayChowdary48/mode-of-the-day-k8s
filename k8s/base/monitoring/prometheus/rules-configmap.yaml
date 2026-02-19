@@ -8,12 +8,20 @@ data:
       - name: mood-alerts
         rules:
           - alert: AppDown
-            expr: up{job="app-pods"} == 0
+            expr: sum(up{job="app-pods"}) == 0
             for: 1m
             labels:
               severity: critical
             annotations:
               summary: "App target down"
+
+          - alert: AppNoReadyPods
+            expr: sum(kube_pod_status_ready{namespace="mood",pod=~"app-.*",condition="true"}) == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "No Ready app pods"
 
           - alert: HighAppLatencyP95
             expr: histogram_quantile(0.95, sum(rate(http_request_latency_seconds_bucket[5m])) by (le)) > 0.8
@@ -31,3 +39,27 @@ data:
               severity: warning
             annotations:
               summary: "Redis exporter down"
+
+          - alert: EnvoyScrapeDown
+            expr: up{job="envoy"} == 0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Envoy metrics scrape down"
+
+          - alert: HighIngress429Rate
+            expr: sum(rate(nginx_ingress_controller_requests{status="429"}[5m])) > 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Ingress 429 rate high"
+
+          - alert: EnvoyRedisConnectFailures
+            expr: rate(envoy_cluster_upstream_cx_connect_fail{cluster_name="redis_cluster"}[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Envoy Redis connect failures"

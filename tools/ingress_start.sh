@@ -26,11 +26,11 @@ cleanup() {
 trap cleanup EXIT
 
 echo "ingress port-forward: http://127.0.0.1:8080"
-echo "host-header proxy:   http://127.0.0.1:8088 (Host: $INGRESS_HOST)"
+echo "host-header proxy:   http://127.0.0.1:8089 (Host: $INGRESS_HOST)"
 echo "prometheus:          http://127.0.0.1:9090"
 echo "grafana:             http://127.0.0.1:3000"
 
 python /Users/pranaychowd.pinapaka/Desktop/Projects/k8s/tools/ingress_host_proxy.py \
-  --listen 127.0.0.1:8088 \
-  --upstream 127.0.0.1:8080 \
+  --listen 127.0.0.1:8089 \
+  --upstream-url http://127.0.0.1:8080 \
   --host "$INGRESS_HOST"

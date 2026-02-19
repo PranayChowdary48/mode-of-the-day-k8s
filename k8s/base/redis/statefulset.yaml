@@ -3,8 +3,8 @@ kind: StatefulSet
 metadata:
   name: redis
 spec:
-  serviceName: redis
-  replicas: 1
+  serviceName: redis-headless
+  replicas: 2
   selector:
     matchLabels:
       app: redis
@@ -13,17 +13,35 @@ spec:
       labels:
         app: redis
     spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: "Always"
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: redis
           image: redis:7-alpine
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 6379
+          command:
+            - "sh"
+            - "-c"
           args:
-            - "redis-server"
-            - "--appendonly"
-            - "yes"
-            - "--appendfsync"
-            - "everysec"
+            - |
+              if [ "$(hostname)" = "redis-0" ]; then
+                exec redis-server --appendonly yes --appendfsync everysec
+              else
+                exec redis-server --appendonly yes --appendfsync everysec --replicaof redis-0.redis-headless 6379
+              fi
           volumeMounts:
             - name: data
               mountPath: /data
