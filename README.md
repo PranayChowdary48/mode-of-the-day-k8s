@@ -77,46 +77,108 @@ kubectl -n mood patch rollout app --type='merge' -p \
 
 ### Request flow (runtime)
 ```mermaid
-flowchart LR
-  U[User/Browser] --> I[Ingress-NGINX]
-  I --> S[Service: app]
-  S --> E1[Envoy (pod 1)]
-  S --> E2[Envoy (pod 2)]
-  E1 --> A1[App (pod 1)]
-  E2 --> A2[App (pod 2)]
-  E1 --> R[Redis StatefulSet]
-  E2 --> R
+flowchart TD
+
+  %% Entry
+  U["User / Browser"]
+  DNS["DNS"]
+  LB["Cloud Load Balancer"]
+  ING["Ingress-NGINX Controller"]
+
+  U --> DNS
+  DNS --> LB
+  LB --> ING
+
+  %% Service Layer
+  SVC["Kubernetes Service (ClusterIP)"]
+
+  ING --> SVC
+
+  %% Envoy Layer
+  E1["Envoy Pod 1"]
+  E2["Envoy Pod 2"]
+
+  SVC --> E1
+  SVC --> E2
+
+  %% App Layer
+  A1["App Pod 1"]
+  A2["App Pod 2"]
+
+  E1 --> A1
+  E2 --> A2
+
+  %% Data Layer
+  REDIS["Redis StatefulSet"]
+
+  E1 --> REDIS
+  E2 --> REDIS
 ```
 
 ### Observability path
 ```mermaid
-flowchart LR
-  A[App /metrics] --> PR[Prometheus]
-  E[Envoy :9901 /stats/prometheus] --> PR
-  N[Ingress metrics :10254] --> PR
-  R[Redis Exporter :9121] --> PR
-  KSM[Kube-State-Metrics :8080] --> PR
-  PR --> G[Grafana Dashboards]
+flowchart TD
+
+  %% Metrics Sources
+  APP["App /metrics"]
+  ENVOY["Envoy :9901 stats"]
+  ING["Ingress :10254 metrics"]
+  RED["Redis Exporter :9121"]
+  KSM["Kube-State-Metrics :8080"]
+
+  %% Prometheus
+  PR["Prometheus Server"]
+
+  APP --> PR
+  ENVOY --> PR
+  ING --> PR
+  RED --> PR
+  KSM --> PR
+
+  %% Visualization
+  GRAF["Grafana Dashboards"]
+
+  PR --> GRAF
 ```
+
 
 ### Autoscaling control loop
 ```mermaid
-flowchart LR
-  A[App Metrics] --> PR[Prometheus]
-  PR --> PA[Prometheus Adapter]
-  PA --> HPA[Horizontal Pod Autoscaler]
-  HPA --> RO[Argo Rollout]
-  RO --> RS[ReplicaSets]
-  RS --> Pods[App Pods]
+flowchart TD
+
+  APP["App Pods"]
+  MET["App Metrics"]
+  PR["Prometheus"]
+  PA["Prometheus Adapter"]
+  HPA["Horizontal Pod Autoscaler"]
+  RO["Argo Rollout"]
+  RS["ReplicaSets"]
+
+  APP --> MET
+  MET --> PR
+  PR --> PA
+  PA --> HPA
+  HPA --> RO
+  RO --> RS
+  RS --> APP
 ```
 
 ### Progressive delivery (canary)
 ```mermaid
-flowchart LR
-  RO[Argo Rollout] -->|20%| RS1[ReplicaSet vNext]
-  RO -->|50%| RS1
-  RO -->|100%| RS1
-  RO --> RS0[Stable ReplicaSet]
+flowchart TD
+
+  RO["Argo Rollout Controller"]
+
+  RS0["Stable ReplicaSet v1"]
+  RS1["Canary ReplicaSet v2"]
+
+  RO -->|"20% traffic"| RS1
+  RO -->|"80% traffic"| RS0
+
+  RO -->|"50% traffic"| RS1
+  RO -->|"50% traffic"| RS0
+
+  RO -->|"100% promotion"| RS1
 ```
 
 ---
