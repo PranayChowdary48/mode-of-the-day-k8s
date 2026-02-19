@@ -14,3 +14,13 @@ spec:
                 name: app
                 port:
                   number: 80
+    - host: mood.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port:
+                  number: 80

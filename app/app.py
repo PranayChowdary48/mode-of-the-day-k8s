@@ -4,9 +4,10 @@ import redis
 from flask import Flask, render_template, jsonify, Response, request, g
 import socket
 import time
+import os
 from pythonjsonlogger import jsonlogger
 import logging
-from prometheus_client import Counter, Histogram, generate_latest
+from prometheus_client import Counter, Histogram, Gauge, generate_latest
 
 app = Flask(__name__)
 
@@ -35,10 +36,25 @@ REQUEST_LATENCY = Histogram(
     ["path", "method"]
 )
 
+ACTIVE_REQUESTS = Gauge(
+    "http_requests_in_flight",
+    "In-flight HTTP requests"
+)
+
+def require_basic_auth():
+    user = os.getenv("REFRESH_USER")
+    password = os.getenv("REFRESH_PASSWORD")
+    if not user or not password:
+        return False
+    auth = request.authorization
+    if not auth:
+        return False
+    return auth.username == user and auth.password == password
 
 @app.before_request
 def start_timer():
     g.start_time = time.perf_counter()
+    ACTIVE_REQUESTS.inc()
 
 @app.after_request
 def record_metrics(response):
@@ -49,16 +65,19 @@ def record_metrics(response):
         REQUEST_LATENCY.labels(request.path, request.method).observe(
             time.perf_counter() - g.start_time
         )
+    ACTIVE_REQUESTS.dec()
     return response
 
 @app.route("/metrics")
 def metrics():
     return Response(generate_latest(), mimetype="text/plain")
 
-# Redis connection
+# Redis connection (host/port configurable for sidecar proxy)
+redis_host = os.getenv("REDIS_HOST", "redis")
+redis_port = int(os.getenv("REDIS_PORT", "6379"))
 redis_client = redis.Redis(
-    host="redis",
-    port=6379,
+    host=redis_host,
+    port=redis_port,
     decode_responses=True
 )
 
@@ -114,6 +133,12 @@ def mood_of_the_day():
 
 @app.route("/refresh", methods=["POST"])
 def refresh_mood():
+    if not require_basic_auth():
+        return Response(
+            "Unauthorized",
+            401,
+            {"WWW-Authenticate": 'Basic realm="mood"'}
+        )
     today = datetime.date.today().isoformat()
     redis_key = f"mood:{today}"
 
@@ -145,6 +170,10 @@ def health():
         return {"status": "ready"}, 200
     except Exception:
         return {"status": "not_ready"}, 503
+
+@app.route("/live")
+def live():
+    return {"status": "ok"}, 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

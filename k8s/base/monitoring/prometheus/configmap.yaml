@@ -15,6 +15,12 @@ data:
           - source_labels: [__meta_kubernetes_namespace]
             action: keep
             regex: mood
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: pod
 
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -31,6 +37,28 @@ data:
             regex: ([^:]+)(?::\d+)?;(\d+)
             replacement: $1:$2
 
+      - job_name: "envoy"
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace]
+            action: keep
+            regex: mood
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: mood-app
+          - source_labels: [__meta_kubernetes_pod_phase]
+            action: keep
+            regex: Running
+          - action: replace
+            target_label: __metrics_path__
+            replacement: /stats/prometheus
+          - source_labels: [__address__]
+            action: replace
+            target_label: __address__
+            regex: ([^:]+)(?::\d+)?
+            replacement: $1:9901
+
       - job_name: "redis-exporter"
         static_configs:
           - targets: ["redis-exporter:9121"]
@@ -39,3 +67,12 @@ data:
         static_configs:
           - targets:
               - ingress-nginx-controller-metrics.ingress-nginx.svc.cluster.local:10254
+
+      - job_name: "argo-rollouts"
+        static_configs:
+          - targets:
+              - argo-rollouts-metrics.argo-rollouts.svc.cluster.local:8090
+
+      - job_name: "kube-state-metrics"
+        static_configs:
+          - targets: ["kube-state-metrics:8080"]

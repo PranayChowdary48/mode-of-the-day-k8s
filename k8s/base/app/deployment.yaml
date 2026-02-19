@@ -22,6 +22,8 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      serviceAccountName: app-sa
+      priorityClassName: app-high
       containers:
         - name: app
           image: docker-app:latest
@@ -37,7 +39,19 @@ spec:
                 - ALL
           env:
             - name: REDIS_HOST
-              value: redis
+              value: 127.0.0.1
+            - name: REDIS_PORT
+              value: "16379"
+            - name: REFRESH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-refresh-auth
+                  key: username
+            - name: REFRESH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-refresh-auth
+                  key: password
           ports:
             - containerPort: 5000
               name: http
@@ -53,9 +67,15 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 3
-          livenessProbe:
+          startupProbe:
             httpGet:
               path: /health
+              port: http
+            failureThreshold: 20
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /live
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -71,6 +91,48 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+        - name: envoy
+          image: envoyproxy/envoy:v1.30.4
+          args: ["-c", "/etc/envoy/envoy.yaml"]
+          ports:
+            - containerPort: 8080
+              name: envoy-http
+            - containerPort: 9901
+              name: envoy-admin
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: tmp
           emptyDir: {}
+        - name: envoy-config
+          configMap:
+            name: app-envoy-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: mood-app
+                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: mood-app

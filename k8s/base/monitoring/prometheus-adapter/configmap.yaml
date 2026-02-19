@@ -16,3 +16,25 @@ data:
           matches: "^http_requests_total$"
           as: "http_requests_per_second"
         metricsQuery: 'sum(rate(http_requests_total{<<.LabelMatchers>>}[2m])) by (<<.GroupBy>>)'
+      - seriesQuery: 'http_request_latency_seconds_bucket{namespace!="",pod!=""}'
+        resources:
+          overrides:
+            namespace:
+              resource: namespace
+            pod:
+              resource: pod
+        name:
+          matches: "^http_request_latency_seconds_bucket$"
+          as: "http_request_latency_p95_seconds"
+        metricsQuery: 'histogram_quantile(0.95, sum(rate(http_request_latency_seconds_bucket{<<.LabelMatchers>>}[2m])) by (le, <<.GroupBy>>))'
+      - seriesQuery: 'http_requests_in_flight{namespace!="",pod!=""}'
+        resources:
+          overrides:
+            namespace:
+              resource: namespace
+            pod:
+              resource: pod
+        name:
+          matches: "^http_requests_in_flight$"
+          as: "http_requests_in_flight"
+        metricsQuery: 'avg(http_requests_in_flight{<<.LabelMatchers>>}) by (<<.GroupBy>>)'

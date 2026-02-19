@@ -14,6 +14,11 @@ patches:
     path: patches/ingress-host.yaml
 
   - target:
+      kind: Namespace
+      name: mood
+    path: patches/namespace-podsecurity.yaml
+
+  - target:
       kind: Rollout
       name: app
     path: patches/app-replicas.yaml
